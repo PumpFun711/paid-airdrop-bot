@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>$PAID Live Airdrop Overlay</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0a0f; color: #f0f0f0; font-family: 'Space Mono', monospace; }
+  .overlay { width: 680px; padding: 20px; background: #0a0a0f; border: 1px solid #1a1a2e; border-radius: 12px; position: relative; overflow: hidden; }
+  .scanline { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(150,150,255,0.012) 2px, rgba(150,150,255,0.012) 4px); pointer-events: none; }
+  .content { position: relative; z-index: 1; }
+  .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1a1a2e; padding-bottom: 14px; margin-bottom: 18px; }
+  .token-name { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 4px; color: #9945ff; line-height: 1; }
+  .token-sub { font-size: 10px; color: #4a3a7a; letter-spacing: 2px; margin-top: 2px; }
+  .live-badge { display: flex; align-items: center; gap: 7px; background: rgba(153,69,255,0.08); border: 1px solid rgba(153,69,255,0.25); border-radius: 20px; padding: 5px 14px; font-size: 11px; letter-spacing: 2px; color: #9945ff; }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #9945ff; animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+  .stat-box { background: rgba(153,69,255,0.04); border: 1px solid #1a1a2e; border-radius: 8px; padding: 10px 12px; }
+  .stat-label { font-size: 9px; letter-spacing: 2px; color: #3a2a5a; margin-bottom: 4px; }
+  .stat-value { font-size: 18px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; color: #9945ff; }
+  .stat-value.sol { color: #00ff88; }
+  .stat-value.wallets { color: #00cfff; }
+  .countdown-bar { background: #0d0d1a; border: 1px solid #1a1a2e; border-radius: 6px; height: 6px; margin-bottom: 18px; overflow: hidden; }
+  .countdown-fill { height: 100%; background: linear-gradient(90deg, #9945ff, #00ff88); border-radius: 6px; transition: width 1s linear; }
+  .feed-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .feed-title { font-size: 10px; letter-spacing: 3px; color: #3a2a5a; }
+  .feed-next { font-size: 10px; color: #2a2a4a; letter-spacing: 1px; }
+  .feed-next span { color: #9945ff; }
+  .feed { height: 220px; overflow: hidden; display: flex; flex-direction: column; gap: 6px; }
+  .airdrop-row { display: flex; align-items: center; gap: 10px; background: rgba(153,69,255,0.03); border: 1px solid #141420; border-radius: 6px; padding: 8px 12px; font-size: 11px; }
+  .airdrop-row.new { border-color: rgba(153,69,255,0.3); background: rgba(153,69,255,0.07); animation: slideIn 0.4s ease; }
+  @keyframes slideIn { from{transform:translateY(-10px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .row-icon { font-size: 14px; width: 20px; text-align: center; flex-shrink: 0; }
+  .row-wallet { color: #00cfff; font-size: 10px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row-tokens { color: #3a2a5a; font-size: 10px; white-space: nowrap; flex-shrink: 0; }
+  .row-sol { color: #00ff88; font-weight: 700; font-size: 12px; white-space: nowrap; flex-shrink: 0; min-width: 90px; text-align: right; }
+  .row-time { color: #2a2a3a; font-size: 9px; flex-shrink: 0; }
+  .footer { margin-top: 14px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #1a1a2e; padding-top: 12px; font-size: 9px; color: #2a2a4a; letter-spacing: 2px; }
+  .footer strong { color: #9945ff; }
+</style>
+</head>
+<body>
+<div class="overlay">
+  <div class="scanline"></div>
+  <div class="content">
+    <div class="header">
+      <div>
+        <div class="token-name">$PAID</div>
+        <div class="token-sub">HOLD AND GET PAID</div>
+      </div>
+      <div class="live-badge"><div class="live-dot"></div>AIRDROP LIVE</div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-label">TOTAL ROUNDS</div><div class="stat-value" id="total-rounds">0</div></div>
+      <div class="stat-box"><div class="stat-label">WALLETS HIT</div><div class="stat-value wallets" id="total-wallets">0</div></div>
+      <div class="stat-box"><div class="stat-label">LAST ROUND</div><div class="stat-value sol" id="last-round">— SOL</div></div>
+    </div>
+    <div class="countdown-bar"><div class="countdown-fill" id="countdown-fill" style="width:100%"></div></div>
+    <div class="feed-header">
+      <div class="feed-title">LIVE AIRDROP FEED</div>
+      <div class="feed-next">NEXT DROP IN <span id="next-timer">120s</span></div>
+    </div>
+    <div class="feed" id="feed"></div>
+    <div class="footer">
+      <div>MIN HOLD: <strong>1,000,000 $PAID</strong> to qualify</div>
+      <div>50% OF CREATOR FEES → HOLDERS</div>
+      <div>pump.fun/$PAID</div>
+    </div>
+  </div>
+</div>
+<script>
+  const API = window.location.origin + "/stats";
+  let countdown = 120;
+  let lastHistoryLength = 0;
+
+  function shortWallet(w) { return w.slice(0,6) + "..." + w.slice(-4); }
+  function formatTokens(t) { const n = parseInt(t)/1e6; return n>=1000000?(n/1000000).toFixed(1)+"M":(n/1000).toFixed(0)+"K"; }
+
+  function addRow(drop, isNew) {
+    const feed = document.getElementById("feed");
+    const row  = document.createElement("div");
+    row.className = "airdrop-row" + (isNew ? " new" : "");
+    const t = drop.ts ? drop.ts.slice(11,19) : "--:--:--";
+    row.innerHTML = `
+      <div class="row-icon">◈</div>
+      <div class="row-wallet">${shortWallet(drop.wallet)}</div>
+      <div class="row-tokens">${formatTokens(drop.tokens)} $PAID</div>
+      <div class="row-sol">+${drop.sol} SOL</div>
+      <div class="row-time">${t}</div>
+    `;
+    feed.insertBefore(row, feed.firstChild);
+    while (feed.children.length > 7) feed.removeChild(feed.lastChild);
+    if (isNew) setTimeout(() => row.classList.remove("new"), 800);
+  }
+
+  async function fetchStats() {
+    try {
+      const res  = await fetch(API);
+      const data = await res.json();
+      document.getElementById("total-rounds").textContent  = data.totalRounds;
+      document.getElementById("total-wallets").textContent = data.totalWalletsAirdropped;
+      if (data.lastRound) document.getElementById("last-round").textContent = data.lastRound.solDistributed + " SOL";
+      const drops = data.recentDrops || [];
+      const newCount = drops.length - lastHistoryLength;
+      if (newCount > 0 && lastHistoryLength > 0) {
+        drops.slice(0, newCount).forEach(d => addRow(d, true));
+        countdown = 120;
+      } else if (lastHistoryLength === 0 && drops.length > 0) {
+        drops.slice(0, 7).reverse().forEach(d => addRow(d, false));
+      }
+      lastHistoryLength = drops.length;
+    } catch(e) { console.log("Waiting for server...", e.message); }
+  }
+
+  function tick() {
+    countdown--;
+    if (countdown < 0) countdown = 120;
+    document.getElementById("next-timer").textContent = countdown + "s";
+    document.getElementById("countdown-fill").style.width = ((countdown/120)*100) + "%";
+  }
+
+  fetchStats();
+  setInterval(fetchStats, 5000);
+  setInterval(tick, 1000);
+</script>
+</body>
+</html>
