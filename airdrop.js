@@ -17,9 +17,8 @@ const AIRDROP_PCT    = parseFloat(process.env.AIRDROP_PCT || "0.50");
 const INTERVAL_MS    = parseInt(process.env.INTERVAL_MS || "120000");
 const RESERVE_SOL    = parseFloat(process.env.RESERVE_SOL || "0.01");
 
-// Add your liquidity pool wallet here after launch
 const EXCLUDED_WALLETS = new Set([
-  // "YourPoolWalletAddressHere",
+  "7Er3kNcGBiMNQc1YqMBW7cHs9U12DzSAiMP8DJWUKQRS",
 ]);
 
 if (!TOKEN_MINT || !FEE_WALLET_KEY) {
